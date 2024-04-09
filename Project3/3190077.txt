@@ -1,0 +1,142 @@
+#ATOMIKH
+#KARLIS KONSTANTINOS AM:3190077
+
+	.text
+	.globl main
+main:
+	la $a0,messageA
+	li $v0,4
+	syscall
+	li $t1,1
+	la $t2,A
+for1:
+
+	bgt $t1,5,exit_for1
+
+	li $v0,5
+	syscall
+	sw $v0,($t2)
+	add $t2,$t2,4
+	add $t1,$t1,1
+	j for1
+	
+exit_for1:
+
+	la $a0,messageb1
+	li $v0,4
+	syscall
+
+	li $v0,5
+	syscall
+	sw $v0,b1
+
+	la $a0,messageb2
+	li $v0,4
+	syscall
+	
+	li $v0,5
+	syscall
+	sw $v0,b2 
+
+#---------check bounds-----------
+
+	lw $t1,b1
+	lw $t2,b2	
+
+	blt $t1,1,error
+	bgt $t1,5,error
+	blt $t2,1,error
+	bgt $t2,5,error
+	bgt $t1,$t2,error
+
+#--------- call subprogram max--------------
+
+	la $a0,A
+	lw $a1,b1
+	lw $a2,b2
+
+	jal max 
+
+#---------print results---------------
+	move $t1,$v0
+	la $a0,Results
+	li $v0,4
+	syscall
+	move $a0,$t1
+	li $v0,1
+	syscall
+	j Exit
+
+
+error:
+	la $a0,Error1
+	li $v0,4
+	syscall
+	j Exit
+
+Exit:
+	li $v0,10
+	syscall
+
+# ---------------- Subprogram------------------
+max:
+	move $s0,$a0
+	move $s1,$a1
+	move $s2,$a2
+
+	sub $sp,$sp,4
+	sw $ra,($sp)
+
+	move $t1,$s1
+	sub $t1,$t1,1
+	mul $t1,$t1,4
+	add $t1,$t1,$s0
+	lw $s3,($t1)
+
+for2:	
+	add $s1,$s1,1
+	bgt $s1,$s2,exit_for2
+
+	move $t1,$s1
+	sub $t1,$t1,1
+	mul $t1,$t1,4
+	add $t1,$t1,$s0
+	lw $s4,($t1)
+
+	move $a0,$s3
+	move $a1,$s4
+	
+	jal greater
+
+	move $s3,$v0
+	j for2
+exit_for2:
+	lw $ra,0($sp)
+
+	addi $sp,$sp,4
+	move $v0,$s3
+	jr $ra
+	
+#  ------------- greater subprogram--------
+
+greater:
+	ble$a0,$a1,exit_greater
+	move $v0,$a0
+	jr $ra
+exit_greater:	
+	move $v0,$a1
+	jr $ra
+
+
+
+	.data
+
+A:	.space 20
+b1:	.space 4
+b2:	.space 4
+
+messageA:	.asciiz "\n - Array A (5 elements)\n"
+messageb1:	.asciiz "\n - b1 ="
+messageb2:	.asciiz "\n - b2 ="
+Results:	.asciiz"\n - max ="
+Error1: 	.asciiz "\n Index out of bounds"
