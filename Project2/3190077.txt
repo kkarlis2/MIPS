@@ -1,0 +1,95 @@
+# KONSTANTINOS KARLIS AM:3190077
+
+	.text
+	.globl main
+main:
+	# Read CodeWord array from input
+	
+	la $t0,CodeWord
+	lw $t5,Counter
+loop:	
+	li  $v0,12
+	syscall
+	move $t9,$v0
+	addiu $t9,$t9,-48
+	sb $t9,0($t0)
+	addi $t0,$t0,1
+	add $t5,$t5,1
+	blt $t5,12,loop
+
+	#Control 4 parity digits (positions 1, 2, 4, 8) and their data digits for even parity
+	
+	sub $t5,$t5,11
+	sub $t0,$t0,12
+
+Loop:
+	lw $t4,Counter
+	beq $t5,1,L1
+	beq $t5,1,L2
+	beq $t5,1,L3
+	beq $t5,1,L4
+
+L1: 	
+	la $t1,PositionsForDigit1
+	j sum_calculation
+L2: 	
+	la $t1,PositionsForDigit2
+	j sum_calculation
+L3: 	
+	la $t1,PositionsForDigit4
+	j sum_calculation
+L4: 	
+	la $t1,PositionsForDigit8
+	j sum_calculation
+
+sum_calculation:
+	lb $t3,0($t1)
+	beq $t3,-1,exit_loop
+	add $t3,$t3,$t0
+	sub $t3,$t3,1
+	lb $t7,0($t3)
+	add $t4,$t4,$t7
+	addi $t1,$t1,1
+	j sum_calculation
+
+exit_loop:
+	lw $t2,A
+	div $t4,$t2
+	mfhi $t8
+	bne $t8,$zero,not_ok
+	add $t5,$t5,1
+	ble $t5,4,Loop
+	
+	#Print Results and exit:  
+
+
+Print_Result:
+	la $a0,ok_message
+	li $v0,4
+	syscall
+	j Exit
+not_ok:	
+	la $a0,not_ok_message
+	li $v0,4
+	syscall
+	j Exit
+		
+Exit:
+	li $v0,10
+	syscall
+	
+
+	.data
+Counter:	.word 0
+A:		.word 2 
+
+CodeWord:	.byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+PositionsForDigit1:	.byte 1, 3, 5, 7, 9, 11, -1
+PositionsForDigit2:	.byte 2, 3, 6, 7, 10, 11, -1
+PositionsForDigit4:	.byte 4, 5, 6, 7, 12, -1
+PositionsForDigit8:	.byte 8, 9, 10, 11, 12, -1
+
+not_ok_message:		.asciiz "\n - Error in CodeWord"
+
+ok_message: 		.asciiz "\n - No error in CodeWord"
